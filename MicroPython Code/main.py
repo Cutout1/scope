@@ -13,7 +13,7 @@ def dacHandler(timer):
         dacStep = 0
 
 def measurementHandler(timer):
-    global cursorPos, voltageDataC1, voltageDataC2, yValsC1, yValsC2, tft, measuring
+    global cursorPos, voltageDataC1, voltageDataC2, yValsC1, yValsC2, tft, measuring, start
     if(measuring):
         valSumC1 = 0
         valSumC2 = 0
@@ -27,6 +27,7 @@ def measurementHandler(timer):
         tft.pixel((cursorPos, yValsC2[cursorPos]),TFT.BLUE)
         tft.pixel((cursorPos, yValsC1[cursorPos]),TFT.RED)
         if(cursorPos == 159):
+            start = False
             measuring = False
             moveCursor(0)
         else:
@@ -38,45 +39,6 @@ def updateText():
     tft.text((40, 0), '{:+.2f}V'.format(voltageDataC1[cursorPos]), TFT.RED, sysfont, 1, nowrap=True)
     tft.text((90, 0), '{:+.2f}V'.format(voltageDataC2[cursorPos]), TFT.BLUE, sysfont, 1, nowrap=True)
     tft.text((140, 0), 'SIN', TFT.YELLOW, sysfont, 1, nowrap=True)
-
-def leftHandler(pin):
-    global leftPressed, leftDebounce
-    if (time.ticks_diff(time.ticks_ms(),leftDebounce)) > 200:
-        leftPressed = 1
-        leftDebounce = time.ticks_ms()
-
-def rightHandler(pin):
-    global rightPressed, rightDebounce
-    if (time.ticks_diff(time.ticks_ms(),rightDebounce)) > 200:
-        rightPressed = 1
-        rightDebounce = time.ticks_ms()
-        
-def modeHandler(pin):
-    global modePressed, modeDebounce, constantPlot
-    if (time.ticks_diff(time.ticks_ms(),modeDebounce)) > 200:
-        modePressed = 1
-        modeDebounce = time.ticks_ms()
-        constantPlot = not constantPlot
-
-def selectHandler(pin):
-    global selectPressed, selectDebounce, start
-    if (time.ticks_diff(time.ticks_ms(),selectDebounce)) > 200:
-        selectPressed = 1
-        start = True
-        selectDebounce = time.ticks_ms()
-
-def startHandler(pin):
-    global hasReset, startDebounce, start
-    if (time.ticks_diff(time.ticks_ms(),startDebounce)) > 200:
-        start = True
-        hasReset = 0
-        startDebounce = time.ticks_ms()
-
-def resetHandler(pin):
-    global hasReset, resetDebounce
-    if (time.ticks_diff(time.ticks_ms(),resetDebounce)) > 200:
-        hasReset = 1
-        resetDebounce = time.ticks_ms()
 
 def drawAxes():
     tft.text((6, 8), 'v', TFT.YELLOW, sysfont, 1, nowrap=True)
@@ -153,75 +115,109 @@ displayFactor = 8
 voltageDataC1 = [0] * 160
 voltageDataC2 = [0] * 160
 
-yValsC1 = [0] * 160
-yValsC2 = [0] * 160
+yValsC1 = [69] * 160
+yValsC2 = [69] * 160
 
 cursorPos = 0
 
 leftButton = Pin(0, Pin.IN, Pin.PULL_UP)
-leftPressed = 0
-leftDebounce = 0
-leftButton.irq(trigger=Pin.IRQ_FALLING, handler=leftHandler)
-
 rightButton = Pin(1, Pin.IN, Pin.PULL_UP)
-rightPressed = 0
-rightDebounce = 0
-rightButton.irq(trigger=Pin.IRQ_FALLING, handler=rightHandler)
-
 modeButton = Pin(2, Pin.IN, Pin.PULL_UP)
-modePressed = 0
-modeDebounce = 0
-modeButton.irq(trigger=Pin.IRQ_FALLING, handler=modeHandler)
-
 selectButton = Pin(3, Pin.IN, Pin.PULL_UP)
-selectPressed = 0
-selectDebounce = 0
-selectButton.irq(trigger=Pin.IRQ_FALLING, handler=selectHandler)
-
 startSwitch = Pin(9, Pin.IN, Pin.PULL_UP)
-startDebounce = 0
-startSwitch.irq(trigger=Pin.IRQ_FALLING, handler=startHandler)
-
 readySwitch = Pin(8, Pin.IN, Pin.PULL_UP)
-resetDebounce = 0
-hasReset = 0
-readySwitch.irq(trigger=Pin.IRQ_FALLING, handler=resetHandler)
+
+leftCounter  = 0
+rightCounter = 0
+modeCounter  = 0
+selectButton = 0
+readyCounter = 0
+startCounter = 0
+
+leftPressed = False
+rightPressed = False
+
+currentSwitchState = "invalid"
+lastSwitchState = "none"
+
+if (not readySwitch.value()):
+    currentState = "ready"
+elif (not startSwitch.value()):
+    currentState = "start"
 
 start = 0
 
 dacTimer = Timer(mode=Timer.PERIODIC, period=1, callback=dacHandler)
 measurementTimer = Timer(mode=Timer.PERIODIC, period=10, callback=measurementHandler)
 measuring = False
-resetCounter = 0
 textUpdateCounter = 0
-constantPlot = False
 
 while(True):
     time.sleep(0.001)
     textUpdateCounter += 1
-    if(textUpdateCounter >= 10):
+    if(textUpdateCounter >= 9):
         textUpdateCounter = 0
         updateText()
+    
+    if (not leftButton.value()):
+        leftCounter += 1
+        if (leftCounter == 5):
+            leftPressed = True
+        elif (leftCounter > 100):
+            leftCounter -= 5
+            leftPressed = True
+    else:
+        leftCounter = 0
+    
+    if (not rightButton.value()):
+        rightCounter += 1
+        if (rightCounter == 5):
+            rightPressed = True
+        elif (rightCounter > 100):
+            rightCounter -= 5
+            rightPressed = True
+    else:
+        rightCounter = 0
+    
+    if (not readySwitch.value()):
+        readyCounter += 1
+        if (readyCounter > 5):
+            readyCounter = 0
+            currentSwitchState = "ready"
+    else:
+        readyCounter = 0
+    
+    if (not startSwitch.value()):
+        startCounter += 1
+        if (startCounter > 5):
+            startCounter = 0
+            currentSwitchState = "start"
+    else:
+        startCounter = 0
+    
     if(not measuring):
         if(leftPressed):
-            leftPressed = 0
+            leftPressed = False
             if(cursorPos == 0):
                 moveCursor(159)
             else:
                 moveCursor(cursorPos - 1)
         
         if(rightPressed):
-            rightPressed = 0
+            rightPressed = False
             if(cursorPos == 159):
                 moveCursor(0)
             else:
                 moveCursor(cursorPos + 1)
         
-        if(start or constantPlot):
+        if(start):
             tft.fillrect((0,9), (160, 128), TFT.BLACK)
             drawAxes()
             cursorPos = 0
             measuring = True
-            start = False
-            resetCounter = 0
+    
+    if (currentSwitchState != lastSwitchState):
+        if (currentSwitchState == "start" and lastSwitchState == "ready"):
+            start = True
+    lastSwitchState = currentSwitchState
 
