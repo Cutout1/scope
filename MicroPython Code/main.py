@@ -72,12 +72,12 @@ def plottingHandler(timer):
         else: #power plot mode
             if(currentArrayIndex >= 20):
                 voltageDataC1[plottingIndex] = voltageFactor*(ADCDataC1[currentArrayIndex-20])*voltageFactor*(ADCDataC2[currentArrayIndex-20])
-                yValsC1[plottingIndex] = int(69-(1/3)*displayFactor*voltageDataC1[plottingIndex])
+                yValsC1[plottingIndex] = int(69-displayFactor*voltageDataC1[plottingIndex])
                 
                 tft.pixel((plottingIndex, yValsC1[plottingIndex]),TFT.PURPLE)
             else:
                 voltageDataC1[plottingIndex] = voltageFactor*(ADCDataC1[currentArrayIndex+140])*voltageFactor*(ADCDataC2[currentArrayIndex+140])
-                yValsC1[plottingIndex] = int(69-(1/3)*displayFactor*voltageDataC1[plottingIndex])
+                yValsC1[plottingIndex] = int(69-displayFactor*voltageDataC1[plottingIndex])
                 
                 tft.pixel((plottingIndex, yValsC1[plottingIndex]),TFT.PURPLE)
         plottingIndex+=1
