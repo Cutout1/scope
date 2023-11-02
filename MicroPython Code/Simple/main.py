@@ -18,7 +18,7 @@ def stopTimers():
 
 def dacHandler(timer):
     global dacStep, waveDAC
-    if(mode[modeIndex] == "SIN" or mode[modeIndex] == "PWR"):
+    if(mode[modeIndex] == "SIN" or mode[modeIndex] == "PWR" or mode[modeIndex] == "PHS"):
         waveDAC.duty_u16(int(sine[dacStep]))
     elif(mode[modeIndex] == "SQR"):
         if (dacStep < 500):
@@ -45,7 +45,9 @@ def measurementHandler(timer):
 
 def plottingHandler(timer):
     global voltageDataC1, voltageDataC2, yValsC1, yValsC2, ADCDataC1, ADCDataC2, tft, currentArrayIndex, plottingIndex, measuring, cursorPos
-    if(plottingIndex < 160):
+    if (plottingIndex == 0 and mode[modeIndex] == "PHS" and not (dacStep > 445 and dacStep < 455)):
+        plottingIndex = 0
+    elif (plottingIndex < 160):
         cursorPos = plottingIndex
         if(mode[modeIndex] != "PWR"):
             if(currentArrayIndex >= 20):
@@ -184,7 +186,7 @@ currentArrayIndex = 0
 plottingIndex = 160
 cursorPos = 0
 
-mode = ["SIN", "SQR", "PWR"]
+mode = ["SIN", "SQR", "PWR", "PHS"]
 modeIndex = 0
 
 leftButton = Pin(0, Pin.IN, Pin.PULL_UP)
@@ -294,8 +296,9 @@ while(True):
         if(modePressed):
             modePressed = False
             tft.fillrect((0,0), (160, 10), TFT.BLACK)
-            modeIndex += 1
-            if(modeIndex == 3):
+            if(modeIndex < len(mode)):
+                modeIndex += 1
+            else:
                 modeIndex = 0
         
         if (currentSwitchState == "start" and lastSwitchState == "ready"):
