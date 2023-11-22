@@ -45,9 +45,16 @@ def measurementHandler(timer):
 
 def plottingHandler(timer):
     global voltageDataC1, voltageDataC2, yValsC1, yValsC2, ADCDataC1, ADCDataC2, tft, currentArrayIndex, plottingIndex, measuring, cursorPos
-    if (plottingIndex == 0 and mode[modeIndex] == "PHS" and not (dacStep > 445 and dacStep < 455)):
-        plottingIndex = 0
-    elif (plottingIndex < 160):
+    skip = False
+    if (mode[modeIndex] == "PHS" and plottingIndex == 0 and not (dacStep > 445 and dacStep < 455)):
+        skip = True
+    if (mode[modeIndex] == "PWR" and plottingIndex == 0):
+        if(currentArrayIndex > 1):
+            if not (ADCDataC1[currentArrayIndex] < ADCDataC1[currentArrayIndex - 1] and ADCDataC1[currentArrayIndex - 1] > ADCDataC1[currentArrayIndex - 2]):
+                skip = True
+        else:
+            skip = True
+    if (plottingIndex < 160 and not skip):
         cursorPos = plottingIndex
         if(mode[modeIndex] != "PWR"):
             if(currentArrayIndex >= 20):
@@ -67,20 +74,20 @@ def plottingHandler(timer):
                 tft.pixel((plottingIndex, yValsC2[plottingIndex]),TFT.BLUE)
                 tft.pixel((plottingIndex, yValsC1[plottingIndex]),TFT.RED)
         else: #power plot mode
-            if(currentArrayIndex >= 20):
-                voltageDataC1[plottingIndex] = voltageFactor*(ADCDataC1[currentArrayIndex-20])*voltageFactor*(ADCDataC2[currentArrayIndex-20])
+            if(currentArrayIndex >= 82):
+                voltageDataC1[plottingIndex] = voltageFactor*(ADCDataC1[currentArrayIndex-82])*voltageFactor*(ADCDataC2[currentArrayIndex-82])
                 yValsC1[plottingIndex] = int(69-powerDisplayFactor*voltageDataC1[plottingIndex])
                 
                 tft.pixel((plottingIndex, yValsC1[plottingIndex]),TFT.PURPLE)
             else:
-                voltageDataC1[plottingIndex] = voltageFactor*(ADCDataC1[currentArrayIndex+140])*voltageFactor*(ADCDataC2[currentArrayIndex+140])
+                voltageDataC1[plottingIndex] = voltageFactor*(ADCDataC1[currentArrayIndex+78])*voltageFactor*(ADCDataC2[currentArrayIndex+78])
                 yValsC1[plottingIndex] = int(69-powerDisplayFactor*voltageDataC1[plottingIndex])
                 
                 tft.pixel((plottingIndex, yValsC1[plottingIndex]),TFT.PURPLE)
         plottingIndex+=1
         if(plottingIndex == 160):
             cursorPos = 0
-    else:
+    elif not skip:
         measuring=False
 
 def updateText():

@@ -72,12 +72,12 @@ def plottingHandler(timer):
         else: #power plot mode
             if(currentArrayIndex >= 20):
                 voltageDataC1[plottingIndex] = voltageFactor*(ADCDataC1[currentArrayIndex-20])*voltageFactor*(ADCDataC2[currentArrayIndex-20])
-                yValsC1[plottingIndex] = int(69-displayFactor*voltageDataC1[plottingIndex])
+                yValsC1[plottingIndex] = int(69-displayFactor*0.5*voltageDataC1[plottingIndex])
                 
                 tft.pixel((plottingIndex, yValsC1[plottingIndex]),TFT.PURPLE)
             else:
                 voltageDataC1[plottingIndex] = voltageFactor*(ADCDataC1[currentArrayIndex+140])*voltageFactor*(ADCDataC2[currentArrayIndex+140])
-                yValsC1[plottingIndex] = int(69-displayFactor*voltageDataC1[plottingIndex])
+                yValsC1[plottingIndex] = int(69-displayFactor*0.5*voltageDataC1[plottingIndex])
                 
                 tft.pixel((plottingIndex, yValsC1[plottingIndex]),TFT.PURPLE)
         plottingIndex+=1
@@ -238,6 +238,15 @@ c3gnd.value(0)
 c4gnd = Pin(22, Pin.OUT)
 c4gnd.value(0)
 
+thev1k = Pin(4, Pin.OUT)
+thev1k.value(1)
+thev10k = Pin(5, Pin.OUT)
+thev10k.value(1)
+thev100k = Pin(6, Pin.OUT)
+thev100k.value(1)
+thev1M = Pin(7, Pin.OUT)
+thev1M.value(1)
+
 voltageFactor = 6.6/65535
 displayFactor = 8
 
@@ -279,6 +288,11 @@ rightPressed = False
 
 currentSwitchState = "invalid"
 lastSwitchState = "none"
+
+time.sleep(0.1)
+
+if (not selectButton.value()):
+    import resistance
 
 if (not readySwitch.value()):
     currentState = "ready"
