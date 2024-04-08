@@ -1,20 +1,15 @@
 ---
 layout: default
-title: Zendesk Garden Jekyll Theme
+title: Scopocket
 auto_title: false
 ---
 
-# jekyll-theme-zendesk-garden
+# Overview
 
-A Jekyll theme using Zendesk Garden design patterns.
+The Scopocket is a combined oscilloscope, function generator, ohmmeter, power supply, and more
+in a simple and compact package. 
 
-This is was initially possible thanks to the following awesome libraries:
-
-- [`jekyll-postcss` plugin](https://github.com/mhanberg/jekyll-postcss)
-- [`tailwindcss` as a PostCSS plugin](https://tailwindcss.com/docs/installation#add-tailwind-as-a-post-css-plugin)
-- [zendeskgarden/tailwindcss](https://github.com/zendeskgarden/tailwindcss)
-
-> Note: Those have since been removed and any relevant CSS directly included.
+> Note: Test
 
 ## Usage
 
