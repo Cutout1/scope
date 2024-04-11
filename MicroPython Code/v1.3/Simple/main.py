@@ -101,7 +101,13 @@ def updateText():
         tft.text((40, 0), '{:+.2f}mW'.format(voltageDataC1[cursorPos]), TFT.PURPLE, sysfont, 1, nowrap=True)
     elif(mode[modeIndex] == "OHM"):
         if(resistorPresent):
-            tft.text((2, 0), 'R=' + '{:g}'.format(float('{:.{p}g}'.format(ohms, p=4))) + '            ', TFT.WHITE, sysfont, 1, nowrap=True)
+            #tft.text((2, 0), 'R=' + '{:g}'.format(float('{:.{p}g}'.format(ohms, p=4))) + '            ', TFT.WHITE, sysfont, 1, nowrap=True)
+            if ohms < 1000:
+                tft.text((2, 0), 'R=' + '{:g}'.format(float('{:.{p}g}'.format(ohms, p=3))) + '            ', TFT.WHITE, sysfont, 1, nowrap=True)
+            elif ohms < 1000000:
+                tft.text((2, 0), 'R=' + '{:g}'.format(float('{:.{p}g}'.format(ohms/1000, p=4))) + 'k           ', TFT.WHITE, sysfont, 1, nowrap=True)
+            else:
+                tft.text((2, 0), 'R=' + '{:g}'.format(float('{:.{p}g}'.format(ohms/1000000, p=4))) + 'M           ', TFT.WHITE, sysfont, 1, nowrap=True)
             tft.text((2, 50), '                      ', TFT.RED, sysfont, 1, nowrap=True)
         else:
             tft.text((2, 0), 'R=N/A            ', TFT.WHITE, sysfont, 1, nowrap=True)
@@ -143,20 +149,25 @@ def drawAxes():
 
 def moveCursor(newPos):
     global cursorPos
-    tft.vline((cursorPos, 10), 118, TFT.BLACK)
-    drawAxes()
-    if(mode[modeIndex] != "PWR"):
-        tft.pixel((cursorPos, yValsC2[cursorPos]),TFT.BLUE)
-        tft.pixel((cursorPos, yValsC1[cursorPos]),TFT.RED)
+    if(newPos > 159):
+        moveCursor(0)
+    elif(newPos < 0):
+        moveCursor(159)
     else:
-        tft.pixel((cursorPos, yValsC1[cursorPos]),TFT.PURPLE)
-    cursorPos = newPos
-    tft.vline((cursorPos, 10), 118, TFT.GREEN)
-    if(mode[modeIndex] != "PWR"):
-        tft.pixel((cursorPos, yValsC2[cursorPos]),TFT.BLUE)
-        tft.pixel((cursorPos, yValsC1[cursorPos]),TFT.RED)
-    else:
-        tft.pixel((cursorPos, yValsC1[cursorPos]),TFT.PURPLE)
+        tft.vline((cursorPos, 10), 118, TFT.BLACK)
+        drawAxes()
+        if(mode[modeIndex] != "PWR"):
+            tft.pixel((cursorPos, yValsC2[cursorPos]),TFT.BLUE)
+            tft.pixel((cursorPos, yValsC1[cursorPos]),TFT.RED)
+        else:
+            tft.pixel((cursorPos, yValsC1[cursorPos]),TFT.PURPLE)
+        cursorPos = newPos
+        tft.vline((cursorPos, 10), 118, TFT.GREEN)
+        if(mode[modeIndex] != "PWR"):
+            tft.pixel((cursorPos, yValsC2[cursorPos]),TFT.BLUE)
+            tft.pixel((cursorPos, yValsC1[cursorPos]),TFT.RED)
+        else:
+            tft.pixel((cursorPos, yValsC1[cursorPos]),TFT.PURPLE)
 
 def measureResistance(timer):
     global thev1k, thev10k, thev100k, thev1M, ohms, resistorPresent
@@ -265,8 +276,8 @@ thev100k.value(1)
 thev1M = Pin(7, Pin.OUT)
 thev1M.value(1)
 
-voltageFactor = 6.6/65535
-displayFactor = 8
+voltageFactor = 6.7/65535
+displayFactor = 16
 powerDisplayFactor = 4
 
 ADCDataC1 = [0] * 160
@@ -322,6 +333,8 @@ startTimers()
 
 resistanceTimer = 0
 
+fastScroll = False
+
 while(True):
     time.sleep(0.001)
     textUpdateCounter += 1
@@ -333,9 +346,11 @@ while(True):
         leftCounter += 1
         if (leftCounter == 5):
             leftPressed = True
+            fastScroll = False
         elif (leftCounter > 100):
             leftCounter -= 5
             leftPressed = True
+            fastScroll = True
     else:
         leftCounter = 0
     
@@ -343,9 +358,11 @@ while(True):
         rightCounter += 1
         if (rightCounter == 5):
             rightPressed = True
+            fastScroll = False
         elif (rightCounter > 100):
             rightCounter -= 5
             rightPressed = True
+            fastScroll = True
     else:
         rightCounter = 0
     
@@ -384,15 +401,15 @@ while(True):
     if(not measuring):
         if(leftPressed):
             leftPressed = False
-            if(cursorPos == 0):
-                moveCursor(159)
+            if(fastScroll):
+                moveCursor(cursorPos - 5)
             else:
                 moveCursor(cursorPos - 1)
         
         if(rightPressed):
             rightPressed = False
-            if(cursorPos == 159):
-                moveCursor(0)
+            if(fastScroll):
+                moveCursor(cursorPos + 5)
             else:
                 moveCursor(cursorPos + 1)
         
