@@ -6,10 +6,3 @@ auto_page_title: true
 
 sidebar:
   - getting-started
-  - label: Customization
-    children:
-      - sidebar
-      - search
-      - relative-nav
-      - additional-config
-  - development
