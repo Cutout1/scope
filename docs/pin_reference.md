@@ -3,7 +3,6 @@ id: pin-reference
 title: Pin Reference
 ---
 
-# Pin Reference
 This page gives a detailed breakdown of what each pin on the Scopocket does. There are also pin labels on the underside of the Scopocket.
 
 ![Scopocket Pins](pins.png)
@@ -20,7 +19,7 @@ This page gives a detailed breakdown of what each pin on the Scopocket does. The
 10. **Switch 3:** This pin is connected to pin 9 when the switch is in the “Ready” position.
 11. **Waveform Output:** A configurable waveform is output with an amplitude up to 3.3V.
 
-##Buttons and Switches
+## Buttons and Switches
 **Power Switch:** The switch on the left turns the Scopocket on and off. To preserve battery life, turn the Scopocket off when not in use.
 
 **Left Button:** The left button is used to move the cursor left when reading a measured waveform. It may also be used to navigate the settings menu.
@@ -33,7 +32,7 @@ This page gives a detailed breakdown of what each pin on the Scopocket does. The
 
 **Trigger switch:** A recording can be triggered by moving the switch on the right from the “Ready” position to the “Start” position. It also changes the connection between pins 8, 9 and 10, as described in the previous section.
 
-##Modes (Simple software only)
+## Modes (Simple software only)
 **SIN:** 2-channel oscilloscope sampling at 100 samples per second with a 1 Hz sine wave output from the waveform generator. Measurement begins immediately when the trigger switch is moved from “Ready” to “Start.”
 
 **SQR:** 2-channel oscilloscope sampling at 100 samples per second with a 1 Hz square wave output from the waveform generator. Measurement begins immediately when the trigger switch is moved from “Ready” to “Start.”
