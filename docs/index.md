@@ -10,4 +10,4 @@ The Scopocket is a combined oscilloscope, function generator, ohmmeter, power su
 
 The schematics, PCB fabrication files, source code, and case 3D models can all be found in [the GitHub repository.](https://github.com/Cutout1/scope)
 
-![Scopocket Poster](./docs/Single-Scopocket.png)
+![Scopocket](Single-Scopocket.png)
