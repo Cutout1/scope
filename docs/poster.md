@@ -1,6 +1,6 @@
 ---
 id: poster
-title: Scopocket Poster
+title: Poster
 auto_title: false
 ---
 
