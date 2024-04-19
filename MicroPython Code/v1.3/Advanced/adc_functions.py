@@ -18,7 +18,7 @@ def singleSample(adc_channel):
     adc.CS.START_ONCE = 1
     return adc.RESULT_REG
 
-def multiSample(num_channels, sample_rate, num_samples):    
+def multiSample(num_channels, clock_divisor, num_samples):    
     adc = devs.ADC_DEVICE
     
     adc.CS_REG = adc.FCS_REG = 0
@@ -34,14 +34,13 @@ def multiSample(num_channels, sample_rate, num_samples):
         adc.CS.RROBIN = 15 # channes 0, 1, 2, 3
     
     DMA_CHAN = 0
-    NSAMPLES = 8 + 160 * num_channels
-    RATE = sample_rate * num_channels
+    NSAMPLES = 8 + num_samples * num_channels
     dma_chan = devs.DMA_CHANS[DMA_CHAN]
     dma = devs.DMA_DEVICE
 
     adc.FCS.EN = adc.FCS.DREQ_EN = 1
     adc_buff = array.array('H', (0 for _ in range(NSAMPLES)))
-    adc.DIV_REG = 0.5 << 8
+    adc.DIV_REG = clock_divisor << 8
     adc.FCS.THRESH = adc.FCS.OVER = adc.FCS.UNDER = 1
 
     dma_chan.READ_ADDR_REG = devs.ADC_FIFO_ADDR

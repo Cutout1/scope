@@ -101,20 +101,8 @@ def sqrDacHandler(timer):
     else:
         dacStep = 0
 '''
-def slowMeasure(sample_period_us, trigger, triggerThreshold):
-    global C1, C1Ref, C2, C2Ref, ADCDataC1, ADCDataC2, voltageDataC1, voltageDataC2, modeButton
-    
-    if(trigger == "Rising" or trigger == "Falling"):
-        triggerThreshold = int(triggerThreshold * 9929) # 9929 = 65535/6.6
-        lastMeasurement = C1.read_u16() - C1Ref.read_u16()
-        while(True):
-            measurement = C1.read_u16() - C1Ref.read_u16()
-            if (lastMeasurement < triggerThreshold and measurement > triggerThreshold and trigger == "Rising") or (lastMeasurement > triggerThreshold and measurement < triggerThreshold and trigger == "Falling"):
-                break
-            if not modeButton.value():
-                return
-            lastMeasurement = measurement
-        
+def slowMeasure(sample_period_us):
+    global C1, C1Ref, C2, C2Ref, ADCDataC1, ADCDataC2, voltageDataC1, voltageDataC2
     current_time = time.ticks_us()
     for x in range(160):
         initial_time = current_time
@@ -129,35 +117,18 @@ def slowMeasure(sample_period_us, trigger, triggerThreshold):
         voltageDataC1[x] = newVoltageFactor*(ADCDataC1[x])
         voltageDataC2[x] = newVoltageFactor*(ADCDataC2[x])
 
-def fastMeasure(divisor, trigger, triggerThreshold):
-    if(trigger == "Switch"):
-        return adc_functions.multiSample(4, divisor, 160)
-    triggerThreshold = int(triggerThreshold * 621) #621 ~= 4096/6.6
-    while True:
-        measured_data = adc_functions.multiSample(4, divisor, 320)
-        for x in range(160):
-            prev = measured_data[4*x] - measured_data[4*x + 1]
-            curr = measured_data[4*x + 4] - measured_data[4*x + 5]
-            if (trigger == "Rising" and prev < triggerThreshold and curr > triggerThreshold) or (trigger == "Falling" and prev > triggerThreshold and curr < triggerThreshold):
-                return measured_data[x*4 + 4:]
-
 def measure():
     global ADCDataC1, ADCDataC2, voltageDataC1, voltageDataC2
     h_scale = settings[1][1][settings[1][0]]
-    trigger = settings[2][1][settings[2][0]]
-    triggerThreshold = settings[3][1][settings[3][0]]
-    triggerThreshold = int(triggerThreshold[:-1])
     measured_data = 0
     if h_scale == "100ms/div":
-        slowMeasure(10000, trigger, triggerThreshold)
+        slowMeasure(10000)
     if h_scale == "10ms/div":
-        slowMeasure(1000, trigger, triggerThreshold)
+        slowMeasure(1000)
     if h_scale == "1ms/div":
-        #measured_data = adc_functions.multiSample(4, 1200, 160)
-        measured_data = fastMeasure(1200, trigger, triggerThreshold)
+        measured_data = adc_functions.multiSample(4, 1200, 160)
     if h_scale == "100us/div":
-        #measured_data = adc_functions.multiSample(4, 120, 160)
-        measured_data = fastMeasure(120, trigger, triggerThreshold)
+        measured_data = adc_functions.multiSample(4, 120, 160)
     if h_scale == "1ms/div" or h_scale == "100us/div":
         for x in range(160):
             ADCDataC1[x] = measured_data[4*x] - measured_data[4*x + 1]
@@ -383,7 +354,7 @@ settings = [
 [0, ["0.5V/div", "1.0V/div"]],
 [0, ["100ms/div", "10ms/div", "1ms/div", "100us/div"]],
 [0, ["Switch", "Rising", "Falling"]],
-[2, ["-3V", "-1V", "0V", "1V", "3V"]],
+[1, ["-1V", "0V", "1V"]],
 [0, ["sine", "triangle", "square"]],
 [0, ["1Hz", "5Hz", "10Hz"]],
 [3, ["1V", "2V", "3V", "3.3V"]]
@@ -508,8 +479,7 @@ while(True):
         drawAxes()
         cursorPos = 0
         measure()
-        if modeButton.value():
-            plot()
+        plot()
         
     lastSwitchState = currentSwitchState
     
