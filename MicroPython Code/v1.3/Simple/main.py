@@ -229,7 +229,7 @@ def measureResistance(timer):
         resistance = (1000000 * v1M) / (3.29 - v1M)
         resistance_sum += resistance
     
-    if((1000000 * v1M) / (3.29 - v1M) > 30000000):
+    if(abs((1000000 * v1M) / (3.29 - v1M)) > 30000000):
         resistorPresent = False
     else:
         resistorPresent = True
