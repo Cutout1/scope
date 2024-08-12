@@ -1,0 +1,269 @@
+_ScopocketManufactureProcedure.txt
+
+Buying missing parts for PCB
+necotter dropdown: Manage Parts
+JLCPCB Parts
+
+
+Buying Scopoket Boards
+
+Login to JLCPCB
+
+Go to Order Now link (next to users icon upper right)
+
+New tab.  Go to Scopocket.com
+Click Getting Started
+Click on manufacturing page
+Under Printed Circuit Board
+  Click "here in the GitHub repository"
+Click on each file and then click on download icon after file comes up
+It is okay that files show up as gibberish before download
+  No need to unzip the Gerber file
+Back to JLCPCB site
+click Upload Gerber file link (upload from mac downloads folder)
+
+* = non-default value
+
+Default on top row should be "Standard PCB/PCBA"
+Base Material: FR-4
+Layers: 4
+Dimensions: 57.33 * 62 (should self-populate)
+*PCB QTY 30
+
+Industrial/Consumer electronics
+
+--PCB Specifications--
+Different Design: 1
+ *Delivery Format: Panel by JLCPCB
+ *Panel Format: Column: 2 (57.33mm) Row: 2 (62mm)  [4 bds per panel]
+ *Edge Rails: On 2 sides
+ *Panel size: X: (57.33 x 2 + 5*2 (Edge Rails) ) = 124.660 mm Y : ( 62 x 2 ) = 124.000 mm
+PCB Thickness: 1.6
+PCB Color: Green
+Silkscreen: White
+Material Type: FR4-Standard TG 135-140
+*Surface Finish: LeadFree HASL
+
+--High-Spec Options--
+Outer Copper Weight: 1 oz
+Inner Copper Weight: 0.5 oz
+Specify Layer Sequence: No
+*Impedance Control: Yes  use JLC04161H-7628
+Via Covering: Plugged
+Min via hole size/diameter: 0.3mm/(0.4/0.45mm)
+Board Outline Tolerance: ±0.2mm(Regular)
+*Confirm Production file:  (check email to confirm production)
+*Remove Order Number: Specify a location (the location is already written on bd)
+Flying Probe Test: Fully Test
+Gold Fingers: No
+Castellated Holes: No
+Edge Plating: No
+
+--Advanced Options--   Note dropdown menu, but no changes needed.
+4-Wire Kelvin Test: No
+Paper between PCBs: No
+Appearance Quality: IPC Class 2 Standard
+Silkscreen Technology: Ink-jet/Screen Printing Silkscreen
+X-out board: Accept
+Package Box With JLCPCB logo
+PCB Remark: 
+
+Click PCB Assembly switch
+PCBA Type: Standard
+Assembly Side: Top Side
+PCBA Qty: 30  (there will be 4 Scopockets on each PCB)
+Edge Rails/Fiducials: Added by JLCPCB
+*Confirm Parts Placement: Yes  (look for email)
+
+Advanced Options
+Photo Confirmation: No             Board Cleaning: No
+Conformal Coating: No              Bake Components: No
+Packaging: Antistatic bubble film  *Depanel boards & edge rail before delivery: Yes
+Solder Paste: Sn96.5%, Ag3.0%,Cu0.5%(260°)  Add paste for unpopulated pad & step stencil opening: No
+Others: No
+
+Click CONFIRM
+
+NEXT
+Upload BOM and PickAndPlace files
+Click: Process BOM & CPL
+Check parts list to see if any parts missing (can be ordered thru JLCPCB)
+Check that all parts are in place
+NEXT
+Pop up Confirm Production file and Parts Placement: Confirm
+
+If part at bottom is in red, then it must be ordered.  Click on their part number and copy it (starts with C).  Click Next.  Do not place (the part).  Click Place Order (to order part).  Can "edit order" later from starting page.
+
+Hover over username, click Parts Manager to order parts
+Qnty add 10 or so extra
+Click add to my parts lib for assmbly
+
+If all parts are available for the order, Confirm.
+
+Product Description:  Sensor\Controller\Precision Instrument/Research/Education/...  Multimeter
+Save to CART
+Boards and Assembly show up as separate costs
+Secure Checkout
+DHL Express Economy for shipping
+Agree to Customer Compliance Statement
+Submit Order
+
+Check email for final design so can Confirm it and have boards made.
+Usually takes a few hours for email to arrive.
+Or on browser tab for PCB Prototype & PCB Fabrication, look for Reviewing to turn into "Review Production File"
+
+To review production file:
+Login to jlcpcb (same login as easyeda)
+hover over login name and click order history
+
+Note production of boards is done first.  After the boards are made, the placement of parts (soldering) production is done separately.
+
+? Need instructions on the second production step
+
+
+
+
+
+
+
+Older version of instructions after this
+----------------------------------------
+
+* PCB Assembly: click button to "on"
+  Assemble top side (nothing is on bottom side)
+PCBA Type: Standard (for small quantity can do Economic)
+Assembly Side: Top Side
+* PCBA Qty: 30  (panels, not boards)
+Edge Rails/Fiducials: Added by JLCPCB
+
+
+CONFIRM button
+NEXT
+Add BOM File (one of the files downloaded from Scopocket.com)
+Add CPL File (The PickandPlace file downloaded from Scopocket.com)
+Process BOM & CPL button
+Look for shortfalls in last column at bottom (order elsewhere)
+NEXT button
+(Do not Place) if any shortfalls [write down the part numbers, they start with letter C so they can be ordered]
+NEXT
+Confirm parts placement, parts ?
+
+
+Procedure for those with access to EasyEDA Project:
+Goto easyeda.com
+login: 
+
+In future gerber files etc. will be uploaded to GitHub
+
+Daniel R shared design with me on EasyEDA for now.
+
+Note: to login to jlcpcb.com use same login info as for EasyEDA
+
+Back to EasyEDA:
+click on EasyEDA Designer
+Editor Version: Std Edition
+
+Click on ScopocketV1.3 on left side under Work Space: Personal : All Projects : Joined : ScopocketV1.3
+
+Double Click on PCB_ScopocketV1.3
+  brings up picture of PCB
+
+Menu in top bar of EasyEDA page:
+Click on Fabrication
+Click on one-click order PCB/SMT
+Yes, Check DRC  (design rule checking)
+
+* Select Quantity: 120 (for example)
+PCB Color: Green
+Manufacturer: JLCPCB
+Click on one-click order PCB/SMT  (lower right corner)
+Click OK to continue after Gerber etc. generated finish
+  if it gets stuck, close tab to go back one window
+Build Time: as desired
+
+Base Material: leave as is
+Layers: leave as is
+Dimensions: leave as is
+Panel Qty: 30  (panels, not boards here)
+Product Type: Industrial/Consumer electronics
+Different Design: leave as 1
+* Delivery Format: Panel by JLCPCB
+* Panel Format: Column: 2 (57.33mm), Row: 2 (62mm)   4 bds per panel
+* Edge Rails: On 2 sides
+Panel Size = just what they say it is
+
+PCB Thinkness: leave as is
+PCB color: green is cheapest
+Silkscreen: white (only option!)
+Material Type: FR4-Standard TG 135-140
+* Surface Finish: LeadFree HASL  (environmentally better)
+Outer Copper Weight: 1 oz.  (for higher current, use 2 oz)
+Inner Copper Weight: 0.5 oz
+Specify Layer Sequence: No  (o.w. submit separate files for layers?)
+* Impedance Control: Yes  use JLC04161H-7628
+Via Covering: Plugged
+Min via hole size/diameter: 0.3mm/(0.40/0.45mm)
+Board Outline Tolerance: ±0.2mm(Regular)
+* Confirm Production file: Yes  (check email to confirm production)
+* Remove Order Number: Specify a location (location already written on bd)
+Flying Probe Test: Fully test
+Gold Fingers: No
+  (for gold edge connectors)
+Castellated Holes: No
+Edge Plating: No  (helps to have band of metal around edge for EMI)
+
+Advanced Options:  Note dropdown menu, but no changes needed.
+PCB Remark: none
+* PCB Assembly: click button to "on"
+  Assemble top side (nothing is on bottom side)
+PCBA Type: Standard (for small quantity can do Economic)
+Assembly Side: Top Side
+* PCBA Qty: 30  (panels, not boards)
+Edge Rails/Fiducials: Added by JLCPCB
+* Confirm Parts Placement: Yes
+
+Advanced Options:  Note dropdown menu
+Photo Confirmation: No
+Conformal Coating: No
+Packaging: Antistatic bubble film
+Solder Paster: Sn96.5%, Ag3.0%, Cu 0.5% (260°C)
+Others: No
+Board Cleaning: 
+Bake Components:
+Depanel boards & edge rail before delivery: Yes
+Add paste for unpopulated pad & step stencil opening
+Remark
+I agree to Terms and Conditions of JLCPCB assembly Service 
+click Confirm
+
+Review appearance of board and click next
+should show check marks next to Assembly-BOM and Assembly-CPL
+File provided as: Single Piece, pls help me repeat the data
+click Process BOM & CPL
+
+Scroll through BOM and make sure all parts have select checked
+If parts missing, call Daniel (also search icon on each part can be used to find replacement part)
+click NEXT
+Now board shows with BOM to right
+NEXT
+Confirm Parts Placement:  OK
+Product Description: Sensor\Controller\Precision Instrument/Research/Education/...
+Save to CART
+Boards and Assembly show up as separate costs
+Secure Checkout
+DHL Express Economy for shipping
+Agree to Customer Compliance Statement
+Submit Order
+
+
+Check email for final design so can Confirm it and have boards made.
+Usually takes a few hours.
+Or on browser tab for PCB Prototype & PCB Fabrication, look for Reviewing to turn into "Review Production File"
+
+To review production file:
+Login to jlcpcb (same login as easyeda)
+hover over login name and click order history
+
+*not default value
+
+
