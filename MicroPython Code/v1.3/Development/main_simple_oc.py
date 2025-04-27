@@ -168,7 +168,7 @@ def updateText():
         tft.text((90, 0), '{:+.2f}V'.format(voltageDataC2[cursorPos]), TFT.BLUE, sysfont, 1, nowrap=True)
     elif(mode[modeIndex] == "PWR"):
         tft.text((0, 0), '{:.2f}S'.format(cursorPos*0.01), TFT.GREEN, sysfont, 1, nowrap=True)
-        tft.text((40, 0), '{:+.2f}mW  '.format(voltageDataC1[cursorPos]), TFT.PURPLE, sysfont, 1, nowrap=True)
+        tft.text((40, 0), '{:+.2f}mW'.format(voltageDataC1[cursorPos]), TFT.PURPLE, sysfont, 1, nowrap=True)
     elif(mode[modeIndex] == "OHM"):
         r_text = ''
         if not resistorPresent:
@@ -263,7 +263,7 @@ def moveCursor(newPos):
             if(cursorPos > 0):
                 tft.line((cursorPos-1, yValsC1[cursorPos-1]), (cursorPos, yValsC1[cursorPos]), TFT.PURPLE)
             if(cursorPos < 159):
-                tft.line((cursorPos, yValsC1[cursorPos]), (cursorPos+1, yValsC1[cursorPos+1]), TFT.PURPLE)
+                tft.line((cursorPos-1, yValsC1[cursorPos-1]), (cursorPos, yValsC1[cursorPos]), TFT.PURPLE)
         cursorPos = newPos
         tft.vline((cursorPos, 10), 118, TFT.GREEN)
         if(mode[modeIndex] != "PWR"):
@@ -277,7 +277,7 @@ def moveCursor(newPos):
             if(cursorPos > 0):
                 tft.line((cursorPos-1, yValsC1[cursorPos-1]), (cursorPos, yValsC1[cursorPos]), TFT.PURPLE)
             if(cursorPos < 159):
-                tft.line((cursorPos, yValsC1[cursorPos]), (cursorPos+1, yValsC1[cursorPos+1]), TFT.PURPLE)
+                tft.line((cursorPos-1, yValsC1[cursorPos-1]), (cursorPos, yValsC1[cursorPos]), TFT.PURPLE)
 
 def measureResistance(timer):
     global thev1k, thev10k, thev100k, thev1M, ohms, resistorPresent
@@ -379,7 +379,7 @@ def calibrate():
     calibration_file.write(str(cal_0_value) + " " + str(cal_3v3_value))
     calibration_file.close()
 
-spi = SPI(1, baudrate=16_000_000, polarity=0, phase=0, sck=Pin(14), mosi=Pin(15), miso=Pin(12))
+spi = SPI(1, baudrate=133000000, polarity=0, phase=0, sck=Pin(14), mosi=Pin(15), miso=Pin(12))
 tft=TFT(spi,10,11,13)
 tft.initr()
 tft.rgb(True)
