@@ -43,23 +43,6 @@ def stopTimers():
     measurementTimer.deinit()
     plottingTimer.deinit()
 
-def convertRawToVoltage(u16_val):
-    return (u16_val - cal_0_value) * voltageFactor
-'''
-def dacHandler(timer):
-    global dacStep, waveDAC
-    if(mode[modeIndex] == "SIN" or mode[modeIndex] == "PWR" or mode[modeIndex] == "PHS"):
-        waveDAC.duty_u16(int(sine[dacStep]))
-    elif(mode[modeIndex] == "SQR"):
-        if (dacStep < 500):
-            waveDAC.duty_u16(65535)
-        else:
-            waveDAC.duty_u16(32768)
-    if (dacStep != 999):
-        dacStep += 1
-    else:
-        dacStep = 0
-'''
 #2-channel chained DMA for DAC output. channel 2 does the transfer, channel 3 reconfigures
 p=array('I',[0]) #global 1-element array
 def dac_dma(ar,nword):
@@ -102,26 +85,30 @@ def dac_dma(ar,nword):
     mem32[CH3_CTRL_TRIG]=CTRL3
 
 def measurementHandler(timer):
-    global cursorPos, voltageDataC1, voltageDataC2, yValsC1, yValsC2, ADCDataC1, ADCDataC2, tft, measuring, currentArrayIndex
+    global cursorPos, plottedDataC1, plottedDataC2, yValsC1, yValsC2, MeasuredDataC1, MeasuredDataC2, tft, measuring, currentArrayIndex
+    valSumC1Ref = 0
     valSumC1 = 0
+    valSumC2Ref = 0
     valSumC2 = 0
     for y in range(100):
-        valSumC1 += C1.read_u16() - C1Ref.read_u16()
-        valSumC2 += C2.read_u16() - C2Ref.read_u16()
-    ADCDataC1[currentArrayIndex] = valSumC1*0.01
-    ADCDataC2[currentArrayIndex] = valSumC2*0.01
+        valSumC1Ref += C1Ref.read_u16()
+        valSumC1 += C1.read_u16()
+        valSumC2Ref += C2Ref.read_u16()
+        valSumC2 += C2.read_u16()
+    MeasuredDataC1[currentArrayIndex] = ((valSumC1/100) - C1_0_value)*C1_voltage_factor - ((valSumC1Ref/100) - C1Ref_0_value)*C1Ref_voltage_factor
+    MeasuredDataC2[currentArrayIndex] = ((valSumC2/100) - C2_0_value)*C2_voltage_factor - ((valSumC2Ref/100) - C2Ref_0_value)*C2Ref_voltage_factor
     currentArrayIndex += 1
     if (currentArrayIndex == 160):
         currentArrayIndex = 0
 
 def plottingHandler(timer):
-    global voltageDataC1, voltageDataC2, yValsC1, yValsC2, ADCDataC1, ADCDataC2, tft, currentArrayIndex, plottingIndex, measuring, cursorPos
+    global plottedDataC1, plottedDataC2, yValsC1, yValsC2, MeasuredDataC1, MeasuredDataC2, tft, currentArrayIndex, plottingIndex, measuring, cursorPos
     skip = False
     if (mode[modeIndex] == "PHS" and plottingIndex == 0 and not (mem32[CH2_TRANS_COUNT] > 1620 and mem32[CH2_TRANS_COUNT] < 1680)):
         skip = True
     if (mode[modeIndex] == "PWR" and plottingIndex == 0):
         if(currentArrayIndex > 1):
-            if not (ADCDataC1[currentArrayIndex] < ADCDataC1[currentArrayIndex - 1] and ADCDataC1[currentArrayIndex - 1] > ADCDataC1[currentArrayIndex - 2]):
+            if not (MeasuredDataC1[currentArrayIndex] < MeasuredDataC1[currentArrayIndex - 1] and MeasuredDataC1[currentArrayIndex - 1] > MeasuredDataC1[currentArrayIndex - 2]):
                 skip = True
         else:
             skip = True
@@ -129,28 +116,28 @@ def plottingHandler(timer):
         cursorPos = plottingIndex
         if(mode[modeIndex] != "PWR"):
             if(currentArrayIndex >= 20):
-                voltageDataC1[plottingIndex] = voltageFactor*(ADCDataC1[currentArrayIndex-20])
-                voltageDataC2[plottingIndex] = voltageFactor*(ADCDataC2[currentArrayIndex-20])
-                yValsC1[plottingIndex] = int(69-displayFactor*voltageDataC1[plottingIndex])
-                yValsC2[plottingIndex] = int(69-displayFactor*voltageDataC2[plottingIndex])
+                plottedDataC1[plottingIndex] = MeasuredDataC1[currentArrayIndex-20]
+                plottedDataC2[plottingIndex] = MeasuredDataC2[currentArrayIndex-20]
+                yValsC1[plottingIndex] = int(69-displayFactor*plottedDataC1[plottingIndex])
+                yValsC2[plottingIndex] = int(69-displayFactor*plottedDataC2[plottingIndex])
                 
             else:
-                voltageDataC1[plottingIndex] = voltageFactor*(ADCDataC1[currentArrayIndex+140])
-                voltageDataC2[plottingIndex] = voltageFactor*(ADCDataC2[currentArrayIndex+140])
-                yValsC1[plottingIndex] = int(69-displayFactor*voltageDataC1[plottingIndex])
-                yValsC2[plottingIndex] = int(69-displayFactor*voltageDataC2[plottingIndex])
+                plottedDataC1[plottingIndex] = MeasuredDataC1[currentArrayIndex+140]
+                plottedDataC2[plottingIndex] = MeasuredDataC2[currentArrayIndex+140]
+                yValsC1[plottingIndex] = int(69-displayFactor*plottedDataC1[plottingIndex])
+                yValsC2[plottingIndex] = int(69-displayFactor*plottedDataC2[plottingIndex])
                 
             if(plottingIndex > 0):
                 tft.line((plottingIndex-1, yValsC2[plottingIndex-1]), (plottingIndex, yValsC2[plottingIndex]), TFT.BLUE)
                 tft.line((plottingIndex-1, yValsC1[plottingIndex-1]), (plottingIndex, yValsC1[plottingIndex]), TFT.RED)
         else: #power plot mode
             if(currentArrayIndex >= 82):
-                voltageDataC1[plottingIndex] = voltageFactor*(ADCDataC1[currentArrayIndex-82])*voltageFactor*(ADCDataC2[currentArrayIndex-82])
-                yValsC1[plottingIndex] = int(69-powerDisplayFactor*voltageDataC1[plottingIndex])
+                plottedDataC1[plottingIndex] = MeasuredDataC1[currentArrayIndex-82]*MeasuredDataC2[currentArrayIndex-82]
+                yValsC1[plottingIndex] = int(69-powerDisplayFactor*plottedDataC1[plottingIndex])
             
             else:
-                voltageDataC1[plottingIndex] = voltageFactor*(ADCDataC1[currentArrayIndex+78])*voltageFactor*(ADCDataC2[currentArrayIndex+78])
-                yValsC1[plottingIndex] = int(69-powerDisplayFactor*voltageDataC1[plottingIndex])
+                plottedDataC1[plottingIndex] = MeasuredDataC1[currentArrayIndex+78]*MeasuredDataC2[currentArrayIndex+78]
+                yValsC1[plottingIndex] = int(69-powerDisplayFactor*plottedDataC1[plottingIndex])
                 
             if(plottingIndex > 0):
                 tft.line((plottingIndex-1, yValsC1[plottingIndex-1]), (plottingIndex, yValsC1[plottingIndex]), TFT.PURPLE)
@@ -164,11 +151,11 @@ def updateText():
     global tft, last_c1, last_c2, last_r_text
     if(mode[modeIndex] == "SIN" or mode[modeIndex] == "SQR" or mode[modeIndex] == "PHS"):
         tft.text((0, 0), '{:.2f}S'.format(cursorPos*0.01), TFT.GREEN, sysfont, 1, nowrap=True)
-        tft.text((40, 0), '{:+.2f}V'.format(voltageDataC1[cursorPos]), TFT.RED, sysfont, 1, nowrap=True)
-        tft.text((90, 0), '{:+.2f}V'.format(voltageDataC2[cursorPos]), TFT.BLUE, sysfont, 1, nowrap=True)
+        tft.text((40, 0), '{:+.2f}V'.format(plottedDataC1[cursorPos]), TFT.RED, sysfont, 1, nowrap=True)
+        tft.text((90, 0), '{:+.2f}V'.format(plottedDataC2[cursorPos]), TFT.BLUE, sysfont, 1, nowrap=True)
     elif(mode[modeIndex] == "PWR"):
         tft.text((0, 0), '{:.2f}S'.format(cursorPos*0.01), TFT.GREEN, sysfont, 1, nowrap=True)
-        tft.text((40, 0), '{:+.2f}mW  '.format(voltageDataC1[cursorPos]), TFT.PURPLE, sysfont, 1, nowrap=True)
+        tft.text((40, 0), '{:+.2f}mW  '.format(plottedDataC1[cursorPos]), TFT.PURPLE, sysfont, 1, nowrap=True)
     elif(mode[modeIndex] == "OHM"):
         r_text = ''
         if not resistorPresent:
@@ -189,13 +176,17 @@ def updateText():
         #tft.text((12, 10), 'Ohms', TFT.WHITE, sysfont, 1, nowrap=True)
         tft.text((2, 100), 'R is the resistance       between the C1+ pin and   GND, measured in ohms.', TFT.WHITE, sysfont, 1, nowrap=False)
     elif(mode[modeIndex] == "VLT"):
-        c1_sum = 0
-        c2_sum = 0
+        valSumC1Ref = 0
+        valSumC1 = 0
+        valSumC2Ref = 0
+        valSumC2 = 0
         for x in range(1000):
-            c1_sum += C1.read_u16() - C1Ref.read_u16()
-            c2_sum += C2.read_u16() - C2Ref.read_u16()
-        c1_voltage = '{:+.3f}V'.format((c1_sum/1000)*voltageFactor)
-        c2_voltage = '{:+.3f}V'.format((c2_sum/1000)*voltageFactor)
+            valSumC1Ref += C1Ref.read_u16()
+            valSumC1 += C1.read_u16()
+            valSumC2Ref += C2Ref.read_u16()
+            valSumC2 += C2.read_u16()
+        c1_voltage = '{:+.3f}V'.format((valSumC1/1000 - C1_0_value)*C1_voltage_factor - (valSumC1Ref/1000 - C1Ref_0_value)*C1Ref_voltage_factor)
+        c2_voltage = '{:+.3f}V'.format((valSumC2/1000 - C2_0_value)*C2_voltage_factor - (valSumC2Ref/1000 - C2Ref_0_value)*C2Ref_voltage_factor)
         
         tft.text((16, 10), "C1:", TFT.RED, sysfont, 3, nowrap=True)
         tft.text((16, 68), "C2:", TFT.BLUE, sysfont, 3, nowrap=True)
@@ -286,28 +277,28 @@ def measureResistance(timer):
     val_sum = 0
     for x in range(1000):
         val_sum += C1.read_u16()
-    v1k = convertRawToVoltage(val_sum/1000)
+    v1k = (val_sum/1000 - C1_0_value) * C1_voltage_factor
     thev1k.value(1)
     thev10k.value(0)
     time.sleep(0.01)
     val_sum = 0
     for x in range(1000):
         val_sum += C1.read_u16()
-    v10k = convertRawToVoltage(val_sum/1000)
+    v10k = (val_sum/1000 - C1_0_value) * C1_voltage_factor
     thev10k.value(1)
     thev100k.value(0)
     time.sleep(0.01)
     val_sum = 0
     for x in range(1000):
         val_sum += C1.read_u16()
-    v100k = convertRawToVoltage(val_sum/1000)
+    v100k = (val_sum/1000 - C1_0_value) * C1_voltage_factor
     thev100k.value(1)
     thev1M.value(0)
     time.sleep(0.02)
     val_sum = 0
     for x in range(1000):
         val_sum += C1.read_u16()
-    v1M = convertRawToVoltage(val_sum/1000)
+    v1M = (val_sum/1000 - C1_0_value) * C1_voltage_factor
     thev1M.value(1)
     
     num_sources = 0
@@ -347,36 +338,70 @@ def measureResistance(timer):
         ohms = resistance_sum
 
 def calibrate():
-    global cal_0_value, cal_3v3_value
+    global C1Ref_0_value, C1Ref_3v3_value, C1_0_value, C1_3v3_value, C2Ref_0_value, C2Ref_3v3_value, C2_0_value, C2_3v3_value
     calibration_file = open("calibration.txt", "w")
     calibration_complete = False
     while not calibration_complete:
         tft.fill(TFT.BLACK)
-        tft.text((2, 0), 'GND Calibration: Connect  C1+ directly to GND for   calibration, then press   select', TFT.WHITE, sysfont, 1, nowrap=False)
+        tft.text((2, 0), 'GND Calibration: Connect  C1-, C1+, C2-, and C2+    directly to GND then pressthe Select button.', TFT.WHITE, sysfont, 1, nowrap=False)
         while selectButton.value():
             time.sleep(0.1)
         val_sum = 0
         for x in range(1000):
+            val_sum += C1Ref.read_u16()
+        C1Ref_0_value = val_sum / 1000
+        
+        val_sum = 0
+        for x in range(1000):
             val_sum += C1.read_u16()
-        cal_0_value = val_sum / 1000
+        C1_0_value = val_sum / 1000
+        
+        val_sum = 0
+        for x in range(1000):
+            val_sum += C2Ref.read_u16()
+        C2Ref_0_value = val_sum / 1000
+        
+        val_sum = 0
+        for x in range(1000):
+            val_sum += C2.read_u16()
+        C2_0_value = val_sum / 1000
+        
         time.sleep(0.5)
         
         tft.fill(TFT.BLACK)
-        tft.text((2, 0), '3.3V Calibration: Connect C1+ directly to +3.3 for  calibration, then press   select', TFT.WHITE, sysfont, 1, nowrap=False)
+        tft.text((2, 0), '3.3V Calibration: Connect C1-, C1+, C2-, and C2+    directly to +3.3V then    press the Select button.', TFT.WHITE, sysfont, 1, nowrap=False)
         while selectButton.value():
             time.sleep(0.1)
         val_sum = 0
         for x in range(1000):
-            val_sum += C1.read_u16()
-        cal_3v3_value = val_sum / 1000
+            val_sum += C1Ref.read_u16()
+        C1Ref_3v3_value = val_sum / 1000
         
-        if cal_0_value < 25000 or cal_0_value > 40000 or cal_3v3_value < 55000:
+        val_sum = 0
+        for x in range(1000):
+            val_sum += C1.read_u16()
+        C1_3v3_value = val_sum / 1000
+        
+        val_sum = 0
+        for x in range(1000):
+            val_sum += C2Ref.read_u16()
+        C2Ref_3v3_value = val_sum / 1000
+        
+        val_sum = 0
+        for x in range(1000):
+            val_sum += C2.read_u16()
+        C2_3v3_value = val_sum / 1000
+    
+        if (C1Ref_0_value < 25000 or C1Ref_0_value > 40000 or C1Ref_3v3_value < 55000
+        or C1_0_value < 25000 or C1_0_value > 40000 or C1_3v3_value < 55000
+        or C2Ref_0_value < 25000 or C2Ref_0_value > 40000 or C2Ref_3v3_value < 55000
+        or C2_0_value < 25000 or C2_0_value > 40000 or C2_3v3_value < 55000):
             tft.fill(TFT.BLACK)
             tft.text((2, 0), 'Calibration failed. Pleasetry again.', TFT.WHITE, sysfont, 1, nowrap=False)
             time.sleep(3)
         else:
             calibration_complete = True
-    calibration_file.write(str(cal_0_value) + " " + str(cal_3v3_value))
+    calibration_file.write(str(C1Ref_0_value) + " " + str(C1Ref_3v3_value) + " " + str(C1_0_value) + " " + str(C1_3v3_value) + " " +str(C2Ref_0_value) + " " + str(C2Ref_3v3_value) + " " +str(C2_0_value) + " " + str(C2_3v3_value))
     calibration_file.close()
 
 spi = SPI(1, baudrate=16_000_000, polarity=0, phase=0, sck=Pin(14), mosi=Pin(15), miso=Pin(12))
@@ -416,8 +441,15 @@ thev100k.value(1)
 thev1M = Pin(7, Pin.OUT)
 thev1M.value(1)
 
-cal_0_value = 0
-cal_3v3_value = 0
+C1Ref_0_value = 0
+C1Ref_3v3_value = 0
+C1_0_value = 0
+C1_3v3_value = 0
+
+C2Ref_0_value = 0
+C2Ref_3v3_value = 0
+C2_0_value = 0
+C2_3v3_value = 0
 
 time.sleep(0.1)
 
@@ -427,15 +459,24 @@ try:
         calibrate()
     calibration_file = open("calibration.txt", "r")
     calibration_values = calibration_file.readline().split(" ")
-    cal_0_value = float(calibration_values[0])
-    cal_3v3_value = float(calibration_values[1])
+    C1Ref_0_value = float(calibration_values[0])
+    C1Ref_3v3_value = float(calibration_values[1])
+    C1_0_value = float(calibration_values[2])
+    C1_3v3_value = float(calibration_values[3])
+    C2Ref_0_value = float(calibration_values[4])
+    C2Ref_3v3_value = float(calibration_values[5])
+    C2_0_value = float(calibration_values[6])
+    C2_3v3_value = float(calibration_values[7])
     calibration_file.close()
 except:
     # calibration mandatory if there is no existing calibration.txt
     calibrate()
 
-voltageFactor = 3.3/(cal_3v3_value - cal_0_value)
-    
+C1Ref_voltage_factor = 3.3/(C1Ref_3v3_value - C1Ref_0_value)
+C1_voltage_factor = 3.3/(C1_3v3_value - C1_0_value)
+C2Ref_voltage_factor = 3.3/(C2Ref_3v3_value - C2Ref_0_value)
+C2_voltage_factor = 3.3/(C2_3v3_value - C2_0_value)
+
 tft.fill(TFT.BLACK)
 drawAxes()
 
@@ -451,11 +492,11 @@ c4gnd.value(0)
 displayFactor = 16
 powerDisplayFactor = 4
 
-ADCDataC1 = [0] * 160
-ADCDataC2 = [0] * 160
+MeasuredDataC1 = [0] * 160
+MeasuredDataC2 = [0] * 160
 
-voltageDataC1 = [0] * 160
-voltageDataC2 = [0] * 160
+plottedDataC1 = [0] * 160
+plottedDataC2 = [0] * 160
 
 yValsC1 = [69] * 160
 yValsC2 = [69] * 160
