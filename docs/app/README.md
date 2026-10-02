@@ -57,7 +57,7 @@ monitor, Thonny, the Arduino IDE, or the app in another tab. Close it and try ag
 - **Settings:** every device setting appears in the sidebar and stays in sync both ways. Changes made
   with the device's own buttons show up in the app.
 - **Firmware updates:** *Firmware update mode…* reboots the Scopocket into its USB bootloader, so a new
-  `scopocket.uf2` can be copied onto it without pressing BOOTSEL.
+  `Firmware/advanced_scopocket_firmware.uf2` can be copied onto it without pressing BOOTSEL.
 
 ## Code layout
 | File | Purpose |

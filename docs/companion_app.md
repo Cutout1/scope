@@ -22,7 +22,9 @@ The Scopocket Companion app runs in your web browser and connects to the Scopock
 ## Requirements
 
 - **Browser:** Google Chrome or Microsoft Edge on Windows, macOS, Linux or ChromeOS. The app uses Web Serial, which Firefox and Safari don't support.
-- **Firmware:** the Scopocket must run the C firmware from the [Firmware/C folder of the GitHub repository](https://github.com/Cutout1/scope/tree/main/Firmware/C). To install it, copy `scopocket.uf2` to the Scopocket while it is in update mode.
+- **Firmware:** the Scopocket must run the current firmware, [`advanced_scopocket_firmware.uf2`](https://github.com/Cutout1/scope/raw/main/Firmware/advanced_scopocket_firmware.uf2), from the Firmware folder of the GitHub repository. To install it:
+  1. Put the Scopocket in update mode. Either hold the BOOTSEL connection while switching it on, or use the app's *Firmware update mode…* button if it already runs this firmware.
+  2. The Scopocket appears as a USB drive called RPI-RP2. Copy the file onto it.
 - **Demo mode:** you can try the app without a Scopocket. **Demo** in the top bar runs a simulated one.
 
 ## Connecting

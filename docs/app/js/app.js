@@ -667,13 +667,13 @@
     if (!dev) return;
     const ok = confirm(
       'Restart the Scopocket in firmware update mode?\n\n' +
-        'It will disconnect and appear as a USB drive called RPI-RP2. Copy the new scopocket.uf2 onto that ' +
+        'It will disconnect and appear as a USB drive called RPI-RP2. Copy the new firmware file (advanced_scopocket_firmware.uf2) onto that ' +
         'drive; it restarts by itself when the copy finishes.');
     if (!ok) return;
     dev.action('BOOTSEL');
     setTimeout(() => {
       disconnect();
-      say('The Scopocket is in firmware update mode: copy scopocket.uf2 to the RPI-RP2 drive.');
+      say('The Scopocket is in firmware update mode: copy advanced_scopocket_firmware.uf2 to the RPI-RP2 drive.');
     }, 300);
   };
 
