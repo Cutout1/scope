@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scopocket Companion</title>
+  <script>
+    // Web Serial only works on secure pages: move http:// visitors to https://
+    // (local development over http://localhost is fine).
+    if (location.protocol === 'http:' && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname))
+      location.replace('https:' + location.href.slice(5));
+  </script>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Scopocket <span>Companion</span></div>
+    <div class="conn">
+      <button id="btn-connect" class="primary">Connect</button>
+      <button id="btn-reconnect" hidden>Reconnect</button>
+      <button id="btn-demo">Demo</button>
+      <button id="btn-disconnect" hidden>Disconnect</button>
+    </div>
+    <div class="chips">
+      <span id="chip-conn" class="chip off">Not connected</span>
+      <span id="chip-acq" class="chip" hidden></span>
+      <span id="chip-menu" class="chip warn" hidden>Menu open on device</span>
+      <span id="chip-batt" class="chip bad" hidden>Low battery</span>
+      <span id="chip-ovr" class="chip bad" hidden>Overrun</span>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <nav class="modes" id="modes" hidden></nav>
+
+  <main>
+    <section class="workspace">
+      <!-- Not connected -->
+      <div id="view-welcome" class="view welcome">
+        <h1>Connect your Scopocket</h1>
+        <ol>
+          <li>Plug the Scopocket into this computer with a USB-C data cable and switch it on.</li>
+          <li>Click <b>Connect</b> and choose the Scopocket from the list.</li>
+        </ol>
+        <p>No Scopocket handy? <b>Demo</b> runs a simulated one, with the waveform generator looped back
+          into C1 and an RC filter on C2.</p>
+        <p class="muted">Needs a browser with Web Serial: Chrome or Edge on Windows, macOS, Linux or ChromeOS.</p>
+      </div>
+
+      <!-- Scope -->
+      <div id="view-scope" class="view" hidden>
+        <div class="toolbar">
+          <div class="group">
+            <button id="btn-pause" title="Freeze the display (the device keeps running)">Pause</button>
+            <button id="btn-rearm" title="Arm another single capture">Re-arm</button>
+            <button id="btn-force" title="Capture now, without waiting for a trigger">Force trigger</button>
+          </div>
+          <div class="group">
+            <label class="toggle"><input type="checkbox" id="chk-cursors"> Cursors</label>
+            <label class="toggle"><input type="checkbox" id="chk-fft"> Spectrum</label>
+            <select id="sel-window" title="FFT window" hidden>
+              <option value="hann">Hann</option>
+              <option value="flattop">Flat-top</option>
+              <option value="rect">Rectangular</option>
+            </select>
+            <label class="toggle" id="lbl-logx" hidden><input type="checkbox" id="chk-logx"> Log f</label>
+          </div>
+          <div class="group">
+            <button id="btn-csv">Save CSV</button>
+            <button id="btn-png">Save image</button>
+          </div>
+        </div>
+        <div class="plots">
+          <div class="plot main"><canvas id="cv-scope"></canvas><div id="scope-badge" class="badge"></div></div>
+          <div class="plot fft" id="fft-wrap" hidden><canvas id="cv-fft"></canvas></div>
+        </div>
+        <p class="hint">Scroll to zoom, drag to pan, double-click to reset. Drag the yellow line to set the trigger level.</p>
+        <div class="readouts">
+          <table id="tbl-meas">
+            <thead><tr><th></th><th>Freq</th><th>Period</th><th>Vpp</th><th>Min</th><th>Max</th><th>Mean</th><th>RMS</th><th>AC RMS</th><th>Duty</th></tr></thead>
+            <tbody>
+              <tr class="c1"><th>C1</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              <tr class="c2"><th>C2</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            </tbody>
+          </table>
+          <div id="cursor-read" class="cursor-read" hidden></div>
+        </div>
+
+        <details class="panel" id="panel-deep" open>
+          <summary>Long capture</summary>
+          <div class="row">
+            <label>Length
+              <select id="sel-deep-len">
+                <option>1000</option><option>2000</option><option selected>5000</option>
+                <option>10000</option><option>20000</option><option>24000</option>
+              </select> samples
+            </label>
+            <button id="btn-deep" class="primary">Capture</button>
+            <button id="btn-deep-cancel" hidden>Cancel</button>
+            <button id="btn-live" hidden>Back to live</button>
+            <span id="deep-status" class="muted"></span>
+          </div>
+          <progress id="deep-progress" max="1" value="0" hidden></progress>
+          <p class="muted">Uses the current sample rate and trigger, with up to 200 samples before the trigger.
+            At 100 S/s, 24000 samples is four minutes.</p>
+        </details>
+
+        <details class="panel" id="panel-log">
+          <summary>Data logging</summary>
+          <div class="row">
+            <button id="btn-log" class="primary">Start logging</button>
+            <button id="btn-log-csv">Save CSV</button>
+            <button id="btn-log-clear">Clear</button>
+            <span id="log-status" class="muted"></span>
+          </div>
+          <div class="plot strip"><canvas id="cv-log"></canvas></div>
+          <p class="muted">Streams every sample continuously, at sample rates up to 50 kS/s. Scroll to zoom, drag to
+            look back, double-click to follow live data again.</p>
+        </details>
+      </div>
+
+      <!-- Voltmeter -->
+      <div id="view-volt" class="view" hidden>
+        <div class="cards">
+          <div class="card c1"><h3>C1 <span class="muted">C1+ − C1−</span></h3><div class="big" id="volt-c1">—</div>
+            <div class="minmax" id="volt-mm1"></div></div>
+          <div class="card c2"><h3>C2 <span class="muted">C2+ − C2−</span></h3><div class="big" id="volt-c2">—</div>
+            <div class="minmax" id="volt-mm2"></div></div>
+        </div>
+        <div class="row">
+          <button id="btn-volt-reset">Reset min/max</button>
+          <button id="btn-volt-csv">Save trend CSV</button>
+          <button id="btn-volt-clear">Clear trend</button>
+        </div>
+        <div class="plot strip"><canvas id="cv-volt"></canvas></div>
+      </div>
+
+      <!-- Ohmmeter -->
+      <div id="view-ohm" class="view" hidden>
+        <div class="cards">
+          <div class="card"><h3>Resistance <span class="muted">C1+ to GND</span></h3><div class="big" id="ohm-value">—</div>
+            <div class="minmax" id="ohm-info"></div></div>
+        </div>
+        <div class="row">
+          <button id="btn-ohm-zero">Zero leads</button>
+          <button id="btn-ohm-clear">Clear trend</button>
+        </div>
+        <div class="plot strip"><canvas id="cv-ohm"></canvas></div>
+      </div>
+
+      <!-- Capacitance -->
+      <div id="view-cap" class="view" hidden>
+        <div class="cards">
+          <div class="card"><h3>Capacitance <span class="muted">C1+ to GND</span></h3><div class="big" id="cap-value">—</div>
+            <div class="minmax" id="cap-info"></div></div>
+        </div>
+        <div class="row">
+          <button id="btn-cap-measure" class="primary">Measure</button>
+          <button id="btn-cap-zero">Zero</button>
+          <span id="cap-live" class="muted"></span>
+        </div>
+        <p class="muted">Discharge the capacitor (short its leads) so C1+ is below 0.5 V, then measure. For small
+          capacitors, measure once with nothing connected and press Zero to remove stray capacitance.</p>
+        <table id="tbl-cap" class="history"><thead><tr><th>#</th><th>Time</th><th>Capacitance</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <aside class="sidebar" id="sidebar" hidden>
+      <section>
+        <h2>Scope</h2>
+        <div id="settings-scope" class="settings"></div>
+      </section>
+      <section>
+        <h2>Waveform generator</h2>
+        <div id="settings-gen" class="settings"></div>
+      </section>
+      <section>
+        <h2>Device</h2>
+        <div id="device-info" class="muted"></div>
+        <button id="btn-bootsel" class="danger">Firmware update mode…</button>
+      </section>
+    </aside>
+  </main>
+
+  <footer id="footer" class="footer"></footer>
+
+  <script src="js/protocol.js"></script>
+  <script src="js/dsp.js"></script>
+  <script src="js/device_info.js"></script>
+  <script src="js/sim.js"></script>
+  <script src="js/device.js"></script>
+  <script src="js/plot.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

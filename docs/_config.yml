@@ -7,8 +7,15 @@ version: false
 
 sidebar:
   - getting-started
+  - companion-app
   - pin-reference
   - manufacturing
   - technical-specs
-  - development-history
   - poster
+
+# The companion app (docs/app) is served as-is; keep its developer files
+# out of the generated site and its search index.
+exclude:
+  - app/README.md
+  - app/tests
+  - app/tools
